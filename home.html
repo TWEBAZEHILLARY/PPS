@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- TODO: update meta title after full rebrand -->
+<title>Pinnacle Power Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #E8ECF3; }
+  input { font-family: inherit; }
+  #page { max-width: 1440px; margin: 0 auto; background: #fff; min-height: 100vh; box-shadow: 0 0 60px rgba(11,26,51,.1); }
+
+  /* Fragment Core — typewriter face used only inside the Terms & Conditions modal.
+     Drop FragmentCore.otf into a fonts/ folder to enable it; falls back to Courier New otherwise. */
+  @font-face {
+    font-family: 'Fragment Core';
+    src: url('fonts/FragmentCore.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+  .terms-content {
+    font-family: 'Fragment Core', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #1e2a3a;
+  }
+</style>
+
+<!-- Customer receipt styles (on-screen hidden; shown only for print/PDF). -->
+<style id="pps-receipt-print">
+  #pps-receipt-root { display: none; }
+  .rcpt { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #0B1A33; background: #fff; width: 100%; max-width: 820px; margin: 0 auto; padding: 30px 34px 24px; box-sizing: border-box; font-size: 12.5px; line-height: 1.5; }
+  .rcpt * { box-sizing: border-box; }
+  .rcpt-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 16px; border-bottom: 2px solid #0B1A33; }
+  .rcpt-logo { height: 46px; width: auto; display: block; }
+  .rcpt-cohead { text-align: right; font-size: 11px; font-weight: 600; color: #5A6B85; line-height: 1.7; }
+  .rcpt-titlebar { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+  .rcpt-title { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #1457E6; }
+  .rcpt-num { font-size: 13px; font-weight: 800; color: #0B1A33; }
+  .rcpt-num span { color: #8A98B0; font-weight: 700; }
+  .rcpt-meta { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; margin-top: 18px; }
+  .rcpt-lbl { font-size: 10px; font-weight: 800; color: #8A98B0; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+  .rcpt-to { font-size: 12px; color: #5A6B85; line-height: 1.7; }
+  .rcpt-cl { font-size: 15px; font-weight: 800; color: #0B1A33; margin-bottom: 2px; }
+  .rcpt-facts { border: 1px solid #E4E9F2; border-radius: 10px; overflow: hidden; align-self: start; }
+  .rcpt-fact { display: flex; justify-content: space-between; padding: 8px 13px; font-size: 12px; }
+  .rcpt-fact:not(:last-child) { border-bottom: 1px solid #EDF1F7; }
+  .rcpt-fact span { color: #8A98B0; font-weight: 700; }
+  .rcpt-fact strong { color: #0B1A33; }
+  table.rcpt-items { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  table.rcpt-items th { background: #0B1A33; color: #fff; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; padding: 9px 10px; text-align: left; }
+  table.rcpt-items td { padding: 9px 10px; font-size: 12px; border-bottom: 1px solid #EDF1F7; vertical-align: top; }
+  table.rcpt-items tbody tr:nth-child(even) { background: #F7F9FC; }
+  table.rcpt-items .c { text-align: center; }
+  table.rcpt-items .r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.rcpt-items .mono { font-weight: 700; }
+  table.rcpt-items .muted { color: #8A98B0; padding: 18px; }
+  .rcpt-bottom { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; margin-top: 20px; align-items: start; }
+  .rcpt-note p { margin: 6px 0 0; font-size: 10.5px; color: #5A6B85; line-height: 1.6; max-width: 340px; }
+  .rcpt-qr { width: 70px; height: 70px; margin-top: 14px; border-radius: 8px; background-color: #0B1A33; background-image: repeating-linear-gradient(0deg, #fff 0 3px, transparent 3px 6px), repeating-linear-gradient(90deg, #fff 0 3px, transparent 3px 6px); background-size: 12px 12px; }
+  .rcpt-qrlbl { font-size: 9.5px; font-weight: 700; color: #8A98B0; margin-top: 6px; }
+  .rcpt-totals { border: 1px solid #E4E9F2; border-radius: 10px; overflow: hidden; }
+  .rcpt-trow { display: flex; justify-content: space-between; padding: 9px 14px; font-size: 12.5px; }
+  .rcpt-trow:not(:last-child) { border-bottom: 1px solid #EDF1F7; }
+  .rcpt-trow span { color: #5A6B85; font-weight: 700; }
+  .rcpt-trow strong { color: #0B1A33; font-variant-numeric: tabular-nums; }
+  .rcpt-grand { background: #0B1A33; }
+  .rcpt-grand span, .rcpt-grand strong { color: #fff; }
+  .rcpt-grand strong { font-size: 15px; }
+  .rcpt-thanks { text-align: center; font-size: 14px; font-weight: 800; color: #1457E6; margin-top: 28px; }
+  .rcpt-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid #E4E9F2; text-align: center; font-size: 10px; color: #8A98B0; font-weight: 600; }
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    html, body { background: #fff !important; }
+    #page { display: none !important; }
+    #pps-receipt-root { display: block !important; }
+    .rcpt { padding: 0; max-width: none; }
+  }
+</style>
+<!-- ─────────────────────────────────────────────────────────────────────────
+     RESPONSIVE OVERRIDES (appended — desktop ≥1200px is completely untouched).
+
+     This page renders with inline React styles, so there are no .container /
+     .hero class hooks and a normal stylesheet cannot override inline styles.
+     These rules therefore target the structural containers by their inline-
+     style *fingerprints* (substring matches on the serialized `style` attr)
+     and use !important to win the cascade against inline styles. Everything is
+     scoped under #root so the print receipt (#pps-receipt-root) is never
+     affected. No colors, fonts, HTML or JS are changed — only sizing, spacing
+     and stacking at small viewports.
+     ───────────────────────────────────────────────────────────────────────── -->
+<style id="pps-responsive">
+  /* Never let a too-wide inline width force a horizontal scrollbar. */
+  @media (max-width: 1199px) { html, body { overflow-x: hidden; } }
+
+  /* ═══════════ ≤1199px — large tablets / small desktops: trim side gutters ═══════════ */
+  @media (max-width: 1199px) {
+    #root [style*="padding: 0 40px"],
+    #root [style*="padding: 24px 40px 0"],
+    #root [style*="padding: 22px 40px 0"],
+    #root [style*="padding: 30px 40px 0"],
+    #root [style*="padding: 34px 40px 0"],
+    #root [style*="padding: 40px 40px 28px"] { padding-left: 28px !important; padding-right: 28px !important; }
+  }
+
+  /* ═══════════ ≤991px — tablets (portrait & landscape): begin stacking ═══════════ */
+  @media (max-width: 991px) {
+    /* hero: category rail / banner / RFQ-card 3-col → single column */
+    #root [style*="grid-template-columns: 236px 1fr 300px"] { grid-template-columns: 1fr !important; }
+    /* trust strip 4-up → 2-up */
+    #root [style*="repeat(4"] { grid-template-columns: 1fr 1fr !important; }
+    /* RFQ banner 1.4fr|1fr → stack (also matches footer; footer re-set below) */
+    #root [style*="grid-template-columns: 1.4fr 1fr"] { grid-template-columns: 1fr !important; }
+    /* footer columns → 2-up */
+    #root [style*="grid-template-columns: 1.4fr 1fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
+    /* distributor logos 6-up → 3-up */
+    #root [style*="repeat(6"] { grid-template-columns: repeat(3, 1fr) !important; }
+    /* product-details hero 420px|1fr → stack */
+    #root [style*="grid-template-columns: 420px 1fr"] { grid-template-columns: 1fr !important; }
+    /* hero headline scales down */
+    #root [style*="font-size: 42px"] { font-size: 32px !important; }
+  }
+
+  /* ═══════════ ≤767px — large phones / small tablets: major stacking, full-width ═══════════ */
+  @media (max-width: 767px) {
+    /* tighter gutters */
+    #root [style*="padding: 0 40px"],
+    #root [style*="padding: 24px 40px 0"],
+    #root [style*="padding: 22px 40px 0"],
+    #root [style*="padding: 30px 40px 0"],
+    #root [style*="padding: 34px 40px 0"],
+    #root [style*="padding: 40px 40px 28px"] { padding-left: 16px !important; padding-right: 16px !important; }
+
+    /* top utility bar wraps instead of squeezing */
+    #root [style*="height: 42px"] { height: auto !important; flex-wrap: wrap !important; gap: 6px 14px !important; padding: 8px 16px !important; }
+
+    /* header row wraps; search bar drops to its own full-width line */
+    #root [style*="height: 78px"] { height: auto !important; flex-wrap: wrap !important; padding: 12px 0 !important; gap: 14px !important; }
+    #root [style*="flex: 1; position: relative"] { flex: 1 1 100% !important; order: 3 !important; }
+    /* tighten the account/cart action cluster so it fits beside the logo */
+    #root [style*="gap: 22px"] { gap: 12px !important; }
+
+    /* every 2-up grid (forms, reviews, trust) → single column */
+    #root [style*="repeat(4"] { grid-template-columns: 1fr !important; }
+    #root [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    #root [style*="grid-template-columns: 1.4fr 1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    #root [style*="repeat(3"] { grid-template-columns: 1fr !important; }
+
+    /* large headings scale for readability */
+    #root [style*="font-size: 42px"] { font-size: 26px !important; letter-spacing: -0.5px !important; }
+    #root [style*="font-size: 32px"] { font-size: 24px !important; }
+    #root [style*="font-size: 28px"] { font-size: 22px !important; }
+
+    /* roomy section paddings tighten */
+    #root [style*="padding: 44px 48px"] { padding: 28px 22px !important; }
+    #root [style*="padding: 40px 44px"] { padding: 28px 22px !important; }
+
+    /* product-details gallery image not too tall on phones */
+    #root [style*="height: 360px"] { height: 240px !important; }
+
+    /* modals: full-bleed with small inset, more usable height */
+    #root [style*="padding: 48px 20px"] { padding: 14px 8px !important; }
+    #root [style*="100vh - 96px"] { max-height: calc(100vh - 28px) !important; }
+    /* catalogue grid: smaller min so 2 cols still fit a phone */
+    #root [style*="minmax(196px, 1fr)"] { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
+
+    /* footer bottom row + payment chips wrap instead of overflowing */
+    #root [style*="padding-top: 20px"] { flex-wrap: wrap !important; gap: 14px !important; align-items: flex-start !important; }
+    #root [style*="padding-top: 20px"] > span { flex-wrap: wrap !important; }
+
+    /* any data table scrolls horizontally rather than breaking layout */
+    #root table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  }
+
+  /* ═══════════ ≤480px — phones (320–480): maximum stacking, minimal padding,
+        crisper type and touch-friendly controls. Builds on the ≤767px tier
+        above, which already does the heavy stacking; these rules add the
+        phone-only refinements. Tablets (≥481px) and desktop are untouched. ═══════════ */
+  @media (max-width: 480px) {
+    /* ── 1 · Gutters: 12px side padding on every major section ── */
+    #root [style*="padding: 0 40px"],
+    #root [style*="padding: 24px 40px 0"],
+    #root [style*="padding: 22px 40px 0"],
+    #root [style*="padding: 30px 40px 0"],
+    #root [style*="padding: 34px 40px 0"],
+    #root [style*="padding: 40px 40px 28px"] { padding-left: 12px !important; padding-right: 12px !important; }
+
+    /* ── 1 · Headings scaled down proportionally ── */
+    #root [style*="font-size: 42px"] { font-size: 24px !important; letter-spacing: -0.5px !important; }
+    #root [style*="font-size: 32px"] { font-size: 22px !important; }
+    #root [style*="font-size: 28px"] { font-size: 21px !important; }
+    #root [style*="font-size: 23px"] { font-size: 19px !important; }
+    #root [style*="font-size: 21px"] { font-size: 18px !important; }
+    #root [style*="font-size: 19px"] { font-size: 17px !important; }
+    #root [style*="font-size: 18px"] { font-size: 16px !important; }
+    /* ── 1 · Body / supporting copy trimmed ~15–20% ── */
+    #root [style*="font-size: 16.5px"] { font-size: 14px !important; }
+    #root [style*="font-size: 15.5px"] { font-size: 13.5px !important; }
+    #root [style*="font-size: 14px"] { font-size: 12.5px !important; }
+    #root [style*="font-size: 13.5px"] { font-size: 12.5px !important; }
+
+    /* ── 2 · Header: smaller logo, compact search & action cluster ── */
+    #root img[alt="Pinnacle Power Systems"] { height: 34px !important; }
+    /* search bar: shorter, sits on its own full-width line (order set at ≤767) */
+    #root [style*="height: 50px"] { height: 44px !important; }
+    /* tighten the Orders / Account / Cart cluster so it fits a phone row */
+    #root [style*="gap: 22px"] { gap: 14px !important; }
+    /* nav row wraps and the All-Categories button keeps a tappable height */
+    #root [style*="height: 52px"] { height: auto !important; flex-wrap: wrap !important; gap: 10px 14px !important; padding: 8px 0 !important; }
+
+    /* ── 3 · Hero: tighter padding, shorter min-height, stacked full-width CTAs ── */
+    #root [style*="padding: 44px 48px"] { padding: 22px 16px !important; }
+    #root [style*="padding: 40px 44px"] { padding: 22px 16px !important; }
+    #root [style*="min-height: 348px"] { min-height: 240px !important; }
+    /* hero / RFQ-card button rows stack and each CTA goes full-width */
+    #root [style*="gap: 12px; position: relative; z-index: 2"] { flex-wrap: wrap !important; }
+    #root [style*="gap: 12px; position: relative; z-index: 2"] > button { flex: 1 1 100% !important; }
+    #root [style*="padding: 13px 24px"] { padding: 13px 18px !important; }
+
+    /* ── 4 · Carousels: tighter card chrome (1-per-slide already set at ≤767) ── */
+    #root [style*="padding: 13px 14px 15px"] { padding: 12px 12px 13px !important; }
+    #root [style*="height: 168px"] { height: 150px !important; }
+
+    /* ── 5 · Modals: near-full-bleed with slim radius; tables already scroll ── */
+    #root [style*="padding: 48px 20px"] { padding: 8px 6px !important; }
+    #root [style*="border-radius: 18px"] { border-radius: 12px !important; }
+    #root [style*="100vh - 96px"] { max-height: calc(100vh - 16px) !important; }
+    #root [style*="minmax(196px, 1fr)"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)) !important; }
+
+    /* ── 6 · Distributor logos 3-up → 2-up ── */
+    #root [style*="repeat(6"] { grid-template-columns: repeat(2, 1fr) !important; }
+
+    /* ── 10 · Touch targets: primary pill buttons keep a ≥44px tap height ── */
+    #root [style*="padding: 13px 24px"],
+    #root [style*="padding: 10px 16px"] { min-height: 44px !important; }
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- ─────────────────────────────────────────────────────────────────────────
+     Firebase Authentication (social login: Google, Facebook→Instagram, Twitter)
+     SETUP: create a free Firebase project, enable the Google / Facebook / Twitter
+     sign-in providers, then paste your project's config below to replace the
+     placeholder values. Until you do, social buttons show a friendly error toast.
+     ───────────────────────────────────────────────────────────────────────── -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Shared Firebase config (single edit point for storefront + admin) -->
+<script src="lib/firebase-config.js"></script>
+
+<!-- ─────────────────────────────────────────────────────────────────────────
+     EmailJS — admin notifications for new inquiries & orders.
+     SETUP: create a free EmailJS account (https://dashboard.emailjs.com), then
+     paste your Public Key, Service ID, and two Template IDs into the constants
+     at the top of lib/commerce.jsx. Until configured, notifications are logged
+     to the browser console instead of being emailed.
+     ───────────────────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function () {
+    // Config lives in lib/firebase-config.js (shared with the admin console).
+    var firebaseConfig = window.PPS_FIREBASE_CONFIG || { apiKey: "YOUR_API_KEY" };
+
+    var ready = false;
+    try {
+      if (window.firebase && firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        ready = true;
+      }
+    } catch (e) { ready = false; }
+    window.PPS_FIREBASE_READY = ready;
+
+    // Returns Promise<firebase.User>. Rejects with err.code === 'auth/popup-closed-by-user'
+    // when the user dismisses the popup, or 'pps/not-configured' until config is set.
+    window.ppsSocialSignIn = function (kind) {
+      return new Promise(function (resolve, reject) {
+        if (!window.firebase || !ready) {
+          var ne = new Error('Firebase is not configured.'); ne.code = 'pps/not-configured'; reject(ne); return;
+        }
+        var provider;
+        if (kind === 'google') provider = new firebase.auth.GoogleAuthProvider();
+        else if (kind === 'instagram' || kind === 'facebook') provider = new firebase.auth.FacebookAuthProvider(); // Instagram accounts sign in via Facebook Login
+        else if (kind === 'twitter') provider = new firebase.auth.TwitterAuthProvider();
+        else { var ue = new Error('Unknown provider.'); ue.code = 'pps/unknown-provider'; reject(ue); return; }
+        firebase.auth().signInWithPopup(provider)
+          .then(function (result) { resolve(result.user); })
+          .catch(reject);
+      });
+    };
+  })();
+</script>
+<body>
+<div id="page"><div id="root"></div></div>
+<div id="pps-receipt-root"></div>
+<script type="text/babel" src="lib/shared.jsx"></script>
+<script type="text/babel" src="lib/brand.jsx"></script>
+<script type="text/babel" src="lib/commerce.jsx"></script>
+<script type="text/babel" src="lib/receipt.jsx"></script>
+<script type="text/babel" src="screens/home-a.jsx"></script>
+<script type="text/babel">
+  ReactDOM.createRoot(document.getElementById('root')).render(<window.HomeA />);
+</script>
+<!-- Admin sync: products live in localStorage under `pps_products` (admin-owned).
+     PRODUCTS is read once on load, so when the admin adds/edits/deletes a product
+     in another tab we reload to pick up the new list. -->
+<script>
+  window.addEventListener('storage', function (e) {
+    if (e.key === 'pps_products' || e.key === 'pps_currency_rates' || e.key === 'pps_hero_media') location.reload();
+  });
+  // Cloud sync (lib/cloud-sync.js): when one of these keys is pulled from the
+  // admin's Firestore, reload so the storefront re-reads it. Orders are NOT
+  // listed — they're read fresh each time the Track Order modal opens.
+  window.PPS_SYNC_RELOAD_KEYS = ['pps_products', 'pps_currency_rates', 'pps_hero_media'];
+</script>
+<script src="lib/cloud-sync.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Cloudflare Pages clean-URL routing for Pinnacle Power Systems
+#
+#   pinnaclepowersystems.ug                 -> storefront (home.html)
+#   pinnaclepowersystems.ug/admindashboard  -> admin console (admin.html)
+#
+# 200 = rewrite: serve that file while keeping the clean URL in the address bar.
+# The admin page loads its scripts with RELATIVE paths (lib/..., admin/...), so it
+# must be served at "/admindashboard" with NO trailing slash — that resolves the
+# scripts from the domain root. The trailing-slash variant is 301'd to normalize.
+
+/admindashboard/   /admindashboard   301
+/admindashboard    /admin.html       200
+/                  /home.html        200

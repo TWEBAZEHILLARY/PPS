@@ -1,0 +1,8 @@
+# Files NOT to upload as part of the deployed site.
+.git
+.gitignore
+node_modules
+wrangler.toml
+.assetsignore
+screenshots
+.thumbnail

@@ -1,0 +1,15 @@
+name = "pinnacle-power-systems"
+compatibility_date = "2026-06-25"
+
+# Static-assets-only Worker: no server code, just serve the files in this repo.
+# `npx wrangler deploy` uploads everything in `directory` and applies the
+# routing rules in _redirects (storefront at /, admin at /admindashboard).
+[assets]
+directory = "./"
+
+# Custom domain — attached automatically on `npx wrangler deploy`.
+# Requires pinnaclepowersystems.cc to be an ACTIVE zone in your Cloudflare account.
+routes = [
+  { pattern = "pinnaclepowersystems.cc", custom_domain = true },
+  { pattern = "www.pinnaclepowersystems.cc", custom_domain = true }
+]
