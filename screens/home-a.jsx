@@ -12,7 +12,7 @@
 
   function Pill({ children, bg, color, style }) {
     return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: bg, color, fontSize: 11.5,
-      fontWeight: 800, letterSpacing: 0.3, padding: '4px 9px', borderRadius: 999, textTransform: 'uppercase', ...style }}>{children}</span>;
+      fontWeight: 800, letterSpacing: 0.3, padding: '4px 9px', borderRadius: 999, textTransform: 'uppercase', whiteSpace: 'nowrap', ...style }}>{children}</span>;
   }
 
   function FooterLink({ label, onClick }) {
@@ -193,15 +193,15 @@
       else if (e.key === 'Escape') { setOpen(false); }
     };
     return (
-      <div ref={boxRef} style={{ flex: 1, position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', height: 50, border: `2px solid ${T.blue}`, borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 16px', borderRight: `1px solid ${T.line}`, fontSize: 14, fontWeight: 700, color: T.ink, height: '100%' }}>
+      <div ref={boxRef} className="ka-search" style={{ flex: 1, position: 'relative' }}>
+        <div className="ka-search-bar" style={{ display: 'flex', alignItems: 'center', height: 50, border: `2px solid ${T.blue}`, borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+          <div className="ka-search-cat" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 16px', borderRight: `1px solid ${T.line}`, fontSize: 14, fontWeight: 700, color: T.ink, height: '100%' }}>
             All <Icon name="chevronDown" size={15} color={T.sub} /></div>
-          <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); setActive(0); }} onFocus={() => q && setOpen(true)} onKeyDown={onKey}
+          <input className="ka-search-input" aria-label="Search products" value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); setActive(0); }} onFocus={() => q && setOpen(true)} onKeyDown={onKey}
             placeholder="Search 18,000+ products, brands and part numbers…" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14.5, padding: '0 16px', fontFamily: F, color: T.ink, background: 'transparent' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '0 16px', color: T.sub }}>
+          <div className="ka-search-extra" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '0 16px', color: T.sub }}>
             <Icon name="mic" size={19} /><Icon name="camera" size={19} /></div>
-          <button onClick={() => results[0] && choose(results[0])} style={{ height: '100%', border: 'none', background: T.blue, color: '#fff', padding: '0 22px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button className="ka-search-btn" aria-label="Search" onClick={() => results[0] && choose(results[0])} style={{ height: '100%', border: 'none', background: T.blue, color: '#fff', padding: '0 22px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <Icon name="search" size={20} color="#fff" /></button>
         </div>
         {open && term && (
@@ -271,7 +271,72 @@
     );
   }
 
+  // Mobile/tablet only (≤991px): matches the CSS breakpoint in index.html where the
+  // desktop category rail is hidden and "All Categories" opens a drawer instead.
+  function useIsMobile() {
+    const q = '(max-width: 991px)';
+    const [m, setM] = React.useState(() => window.matchMedia(q).matches);
+    React.useEffect(() => {
+      const mq = window.matchMedia(q); const h = (e) => setM(e.matches);
+      mq.addEventListener('change', h); return () => mq.removeEventListener('change', h);
+    }, []);
+    return m;
+  }
+
+  function CategoryDrawer({ open, onClose, openCat, trackOrder, returnRef }) {
+    const panelRef = React.useRef(null);
+    React.useEffect(() => {
+      if (!open) return;
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const first = panelRef.current && panelRef.current.querySelector('button');
+      if (first) first.focus();
+      const onKey = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+        if (e.key === 'Tab' && panelRef.current) {
+          const f = Array.from(panelRef.current.querySelectorAll('button:not([disabled])'));
+          if (!f.length) return;
+          const a = f[0], z = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+          else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+        }
+      };
+      document.addEventListener('keydown', onKey);
+      return () => {
+        document.removeEventListener('keydown', onKey);
+        document.body.style.overflow = prevOverflow;
+        if (returnRef && returnRef.current) returnRef.current.focus();
+      };
+    }, [open]);
+    if (!open) return null;
+    const go = (fn) => () => { onClose(); fn(); };
+    const item = { display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 48, padding: '11px 16px', border: 'none', background: '#fff', color: T.ink, fontFamily: F, fontSize: 15, fontWeight: 600, textAlign: 'left', cursor: 'pointer', borderBottom: `1px solid ${T.line}` };
+    return (
+      <div className="ka-drawer-root">
+        <div onClick={onClose} aria-hidden="true" style={{ position: 'fixed', inset: 0, background: 'rgba(11,26,51,.55)', zIndex: 900 }} />
+        <div ref={panelRef} id="ka-category-drawer" role="dialog" aria-modal="true" aria-label="Categories menu" className="ka-drawer"
+          style={{ position: 'fixed', top: 0, bottom: 0, left: 0, width: 'min(340px, 88vw)', background: '#fff', zIndex: 901, overflowY: 'auto', boxShadow: '0 0 60px rgba(11,26,51,.35)', fontFamily: F, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 12px 12px 16px', borderBottom: `1px solid ${T.line}`, background: T.ink, color: '#fff' }}>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>All Categories</div>
+            <button className="ka-drawer-item" aria-label="Close menu" onClick={onClose} style={{ width: 44, height: 44, border: 'none', background: 'rgba(255,255,255,.12)', borderRadius: 10, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+          </div>
+          {CATEGORIES.map((c) => <button key={c.name} className="ka-drawer-item" onClick={go(() => openCat(c.name))} style={item}>
+            <Icon name={c.icon} size={20} color={T.blue} stroke={1.6} /><span style={{ flex: 1 }}>{c.name}</span><Icon name="chevron" size={15} color={T.sub} /></button>)}
+          <button className="ka-drawer-item" onClick={go(() => openCat())} style={{ ...item, color: T.blue, fontWeight: 800 }}><Icon name="filter" size={20} color={T.blue} /><span style={{ flex: 1 }}>Browse full catalogue</span><Icon name="arrowRight" size={16} color={T.blue} /></button>
+          <div style={{ padding: '14px 16px 6px', fontSize: 11.5, fontWeight: 800, color: T.sub, textTransform: 'uppercase', letterSpacing: 0.6 }}>Quick links</div>
+          <button className="ka-drawer-item" onClick={go(trackOrder)} style={item}><Icon name="box" size={20} color={T.sub} /><span style={{ flex: 1 }}>Track Order</span></button>
+          <button className="ka-drawer-item" onClick={go(() => ModalStore.open('inquiry'))} style={{ ...item, color: T.amberInk, background: '#FFF4DC' }}><Icon name="search" size={20} color={T.amberInk} /><span style={{ flex: 1 }}>Source a Rare Part</span></button>
+          <button className="ka-drawer-item" onClick={go(() => ModalStore.open('help'))} style={{ ...item, borderBottom: 'none' }}><Icon name="doc" size={20} color={T.sub} /><span style={{ flex: 1 }}>Help</span></button>
+        </div>
+      </div>
+    );
+  }
+
   function HomeA() {
+    const isMobile = useIsMobile();
+    const [drawer, setDrawer] = React.useState(false);
+    const catBtnRef = React.useRef(null);
+    React.useEffect(() => { if (!isMobile) setDrawer(false); }, [isMobile]);
     const navLinks = ['Circuit Protection', 'Cables', 'Motors & Drives', 'Tech', 'Lighting', 'Enclosures'];
     const cart = useCart();
     const auth = useAuth();
@@ -295,77 +360,72 @@
     return (
       <div style={{ fontFamily: F, background: '#fff', color: T.ink, width: '100%', WebkitFontSmoothing: 'antialiased' }}>
         {/* utility bar */}
-        <div style={{ background: T.ink, color: '#fff', fontSize: 13, fontWeight: 600 }}>
-          <div style={{ padding: '0 40px', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,.85)' }}>
+        <div className="ka-topbar" style={{ background: T.ink, color: '#fff', fontSize: 13, fontWeight: 600 }}>
+          <div className="ka-gut ka-topbar-row" style={{ padding: '0 40px', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="ka-topbar-msg" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,.85)' }}>
               <Icon name="truck" size={16} color={T.amber} /> Free delivery in Kampala on orders over <span style={{ color: '#fff' }}>USh&nbsp;500,000</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, color: 'rgba(255,255,255,.85)' }}>
+            <div className="ka-topbar-tools" style={{ display: 'flex', alignItems: 'center', gap: 18, color: 'rgba(255,255,255,.85)' }}>
               <CurrencySwitch theme={curTheme} size="sm" />
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="pin" size={15} /> Deliver to Kampala</span>
-              <span style={{ cursor: 'pointer' }} onClick={() => ModalStore.open('help')}>Help</span>
+              <span className="ka-topbar-help" role="button" tabIndex={0} style={{ cursor: 'pointer' }} onClick={() => ModalStore.open('help')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ModalStore.open('help'); } }}>Help</span>
             </div>
           </div>
         </div>
         {/* header */}
-        <div style={{ background: '#fff', borderBottom: `1px solid ${T.line}`, padding: '0 40px' }}>
-          <div style={{ height: 78, display: 'flex', alignItems: 'center', gap: 28 }}>
-            <PPSLogo size={42} onClick={() => ppsGo('home')} />
+        <div className="ka-header ka-gut" style={{ background: '#fff', borderBottom: `1px solid ${T.line}`, padding: '0 40px' }}>
+          <div className="ka-header-row" style={{ height: 78, display: 'flex', alignItems: 'center', gap: 28 }}>
+            <div className="ka-logo"><PPSLogo size={42} onClick={() => ppsGo('home')} /></div>
             <HeaderSearch />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-              <button style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', color: T.ink, fontFamily: F }} onClick={trackOrder}>
-                <Icon name="box" size={22} color={T.sub} /><div style={{ textAlign: 'left' }}><div style={{ fontSize: 11, color: T.sub }}>Orders</div><div style={{ fontSize: 13.5, fontWeight: 700 }}>Track Order</div></div></button>
-              <button style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', color: T.ink, fontFamily: F }} onClick={() => ModalStore.open('login')}>
+            <div className="ka-actions" style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+              <button className="ka-action ka-action-track" aria-label="Track Order" title="Track Order" style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', color: T.ink, fontFamily: F }} onClick={trackOrder}>
+                <Icon name="box" size={22} color={T.sub} /><div className="ka-action-label" style={{ textAlign: 'left' }}><div style={{ fontSize: 11, color: T.sub }}>Orders</div><div style={{ fontSize: 13.5, fontWeight: 700 }}>Track Order</div></div></button>
+              <button className="ka-action" aria-label={loggedIn ? 'Account' : 'Sign in'} title={loggedIn ? 'Account' : 'Sign in'} style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', color: T.ink, fontFamily: F }} onClick={() => ModalStore.open('login')}>
                 {loggedIn && auth.get().photoURL
                   ? <img src={auth.get().photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 26, height: 26, borderRadius: 999, objectFit: 'cover', flexShrink: 0 }} />
-                  : <Icon name="user" size={22} color={T.sub} />}<div style={{ textAlign: 'left' }}><div style={{ fontSize: 11, color: T.sub }}>Account</div><div style={{ fontSize: 13.5, fontWeight: 700 }}>{loggedIn ? `Welcome, ${auth.get().firstName}` : 'Sign in'}</div></div></button>
-              <button style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', color: T.ink, fontFamily: F }} onClick={() => ModalStore.open('cart')}>
+                  : <Icon name="user" size={22} color={T.sub} />}<div className="ka-action-label" style={{ textAlign: 'left' }}><div style={{ fontSize: 11, color: T.sub }}>Account</div><div style={{ fontSize: 13.5, fontWeight: 700 }}>{loggedIn ? `Welcome, ${auth.get().firstName}` : 'Sign in'}</div></div></button>
+              <button className="ka-action" aria-label={`Cart, ${cart.count()} items`} title="Cart" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', color: T.ink, fontFamily: F }} onClick={() => ModalStore.open('cart')}>
                 <div style={{ position: 'relative' }}><Icon name="cart" size={24} color={T.ink} />
                   {cart.count() > 0 && <span style={{ position: 'absolute', top: -7, right: -9, background: T.amber, color: T.amberInk, fontSize: 11, fontWeight: 800, minWidth: 19, height: 19, padding: '0 5px', borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cart.count()}</span>}</div>
-                <div style={{ textAlign: 'left' }}><div style={{ fontSize: 11, color: T.sub }}>Cart</div><div style={{ fontSize: 13.5, fontWeight: 700 }}><AnimatedPrice ugx={cart.total()} style={{ fontSize: 13.5 }} /></div></div></button>
+                <div className="ka-action-label" style={{ textAlign: 'left' }}><div style={{ fontSize: 11, color: T.sub }}>Cart</div><div style={{ fontSize: 13.5, fontWeight: 700 }}><AnimatedPrice ugx={cart.total()} style={{ fontSize: 13.5 }} /></div></div></button>
             </div>
           </div>
           {/* nav */}
-          <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 26, fontSize: 14, fontWeight: 600 }}>
-            <button style={{ display: 'flex', alignItems: 'center', gap: 9, background: T.blue, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: F }} onClick={() => openCat()}>
+          <div className="ka-nav" style={{ height: 52, display: 'flex', alignItems: 'center', gap: 26, fontSize: 14, fontWeight: 600 }}>
+            <button ref={catBtnRef} className="ka-cat-btn" aria-expanded={isMobile ? drawer : undefined} aria-controls={isMobile ? 'ka-category-drawer' : undefined} aria-haspopup={isMobile ? 'dialog' : undefined}
+              style={{ display: 'flex', alignItems: 'center', gap: 9, background: T.blue, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: F }}
+              onClick={() => { if (isMobile) setDrawer((d) => !d); else openCat(); }}>
               <Icon name="menu" size={18} color="#fff" /> All Categories</button>
-            <div style={{ flex: 1 }} />
-            <span style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.amberInk, background: '#FFF4DC', padding: '7px 13px', borderRadius: 9, fontWeight: 800, cursor: 'pointer' }} onClick={() => ModalStore.open('inquiry')}>
+            <div className="ka-nav-spacer" style={{ flex: 1 }} />
+            <span className="ka-rare" role="button" tabIndex={0} style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.amberInk, background: '#FFF4DC', padding: '7px 13px', borderRadius: 9, fontWeight: 800, cursor: 'pointer' }} onClick={() => ModalStore.open('inquiry')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ModalStore.open('inquiry'); } }}>
               <Icon name="search" size={16} color={T.amberInk} /> Source a Rare Part</span>
           </div>
         </div>
+        <CategoryDrawer open={isMobile && drawer} onClose={() => setDrawer(false)} openCat={openCat} trackOrder={trackOrder} returnRef={catBtnRef} />
 
         {/* hero */}
-        <div style={{ padding: '24px 40px 0', display: 'grid', gridTemplateColumns: '236px 1fr 300px', gap: 18 }}>
-          <div style={{ border: `1px solid ${T.line}`, borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
+        <div className="ka-hero ka-gut" style={{ padding: '24px 40px 0', display: 'grid', gridTemplateColumns: '236px 1fr', gap: 18 }}>
+          <div className="ka-sidebar" style={{ border: `1px solid ${T.line}`, borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
             {CATEGORIES.map((c, i) => <div key={c.name} onClick={() => openCat(c.name)} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 15px', fontSize: 13.5, fontWeight: 600, color: T.ink, borderBottom: i < CATEGORIES.length - 1 ? `1px solid ${T.line}` : 'none', cursor: 'pointer' }}>
               <Icon name={c.icon} size={19} color={T.blue} stroke={1.6} /><span style={{ flex: 1 }}>{c.name}</span><Icon name="chevron" size={14} color={T.sub} /></div>)}
           </div>
-          <div style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', background: `linear-gradient(120deg, ${T.blueDk}, ${T.blue})`, color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '44px 48px', minHeight: 348 }}>
+          <div className="ka-banner" style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', background: `linear-gradient(120deg, ${T.blueDk}, ${T.blue})`, color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '54px 60px', minHeight: 392 }}>
             <HeroSlideshow />
-            <div style={{ position: 'absolute', right: -40, top: -40, width: 320, height: 320, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
-            <div style={{ position: 'absolute', right: 60, bottom: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,176,32,.16)' }} />
+            <div className="ka-banner-deco" style={{ position: 'absolute', right: -40, top: -40, width: 320, height: 320, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
+            <div className="ka-banner-deco" style={{ position: 'absolute', right: 60, bottom: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,176,32,.16)' }} />
             <Pill bg="rgba(255,255,255,.16)" color="#fff" style={{ alignSelf: 'flex-start', marginBottom: 16, position: 'relative', zIndex: 2 }}>Industrial Supply, Delivered</Pill>
-            <div style={{ fontSize: 42, fontWeight: 800, lineHeight: 1.08, letterSpacing: -1, maxWidth: 470, position: 'relative', zIndex: 2 }}>Every component your project runs on.</div>
-            <div style={{ fontSize: 16.5, color: 'rgba(255,255,255,.85)', margin: '14px 0 26px', maxWidth: 430, lineHeight: 1.5, position: 'relative', zIndex: 2 }}>Genuine ABB, Schneider & Siemens stock — priced in UGX, USD or EUR with same-day Kampala dispatch.</div>
-            <div style={{ display: 'flex', gap: 12, position: 'relative', zIndex: 2 }}>
-              <button style={{ background: T.amber, color: T.amberInk, border: 'none', padding: '13px 24px', borderRadius: 11, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: F }} onClick={() => openCat()}>Shop catalog</button>
-              <button style={{ background: 'rgba(255,255,255,.14)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', padding: '13px 24px', borderRadius: 11, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: F }} onClick={viewBrands}>View brands</button>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ flex: 1, borderRadius: 16, padding: '22px 22px', background: `linear-gradient(150deg, ${T.amber}, #FFC95A)`, color: T.amberInk, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(90,58,0,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}><Icon name="search" size={24} color={T.amberInk} stroke={2.2} /></div>
-              <div style={{ fontSize: 21, fontWeight: 800, lineHeight: 1.12, letterSpacing: -0.4 }}>Can't find a rare part?</div>
-              <div style={{ fontSize: 13.5, fontWeight: 600, margin: '8px 0 16px', lineHeight: 1.45, opacity: .85 }}>Send us the spec or a photo — our sourcing desk quotes within 24h.</div>
-              <button style={{ marginTop: 'auto', alignSelf: 'flex-start', background: T.amberInk, color: '#fff', border: 'none', padding: '11px 18px', borderRadius: 10, fontSize: 13.5, fontWeight: 800, cursor: 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => ModalStore.open('inquiry')}>Source it <Icon name="arrowRight" size={16} color="#fff" /></button>
+            <div className="ka-hero-h1" style={{ fontSize: 54, fontWeight: 800, lineHeight: 1.06, letterSpacing: -1.4, maxWidth: 620, position: 'relative', zIndex: 2 }}>Every component your project runs on.</div>
+            <div className="ka-hero-sub" style={{ fontSize: 19, color: 'rgba(255,255,255,.85)', margin: '16px 0 30px', maxWidth: 560, lineHeight: 1.5, position: 'relative', zIndex: 2 }}>Genuine ABB, Schneider & Siemens stock — priced in UGX, USD or EUR with same-day Kampala dispatch.</div>
+            <div className="ka-hero-ctas" style={{ display: 'flex', gap: 12, position: 'relative', zIndex: 2 }}>
+              <button style={{ background: T.amber, color: T.amberInk, border: 'none', padding: '15px 28px', borderRadius: 11, fontSize: 16, fontWeight: 800, cursor: 'pointer', fontFamily: F }} onClick={() => openCat()}>Shop catalog</button>
+              <button style={{ background: 'rgba(255,255,255,.14)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', padding: '15px 28px', borderRadius: 11, fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: F }} onClick={viewBrands}>View brands</button>
             </div>
           </div>
         </div>
 
         {/* trust strip */}
-        <div style={{ padding: '22px 40px 0' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
+        <div className="ka-gut" style={{ padding: '22px 40px 0' }}>
+          <div className="ka-trust" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
             {[['truck', 'Same-day dispatch', 'On Kampala stock orders'], ['shield', '100% genuine', 'Authorised distributor'], ['doc', 'Datasheets included', 'Specs & certs on every SKU'], ['user', 'Engineer support', 'Mon–Sat · +256 764 250 125']].map(([ic, a, b]) => (
               <div key={a} style={{ display: 'flex', alignItems: 'center', gap: 13, border: `1px solid ${T.line}`, borderRadius: 13, padding: '15px 17px', background: '#fff' }}>
                 <div style={{ width: 42, height: 42, borderRadius: 11, background: T.chip, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={ic} size={22} color={T.blue} stroke={1.7} /></div>
@@ -375,23 +435,23 @@
         </div>
 
         {/* flash deals */}
-        <div style={{ padding: '30px 40px 0' }}>
+        <div className="ka-gut" style={{ padding: '30px 40px 0' }}>
           <div style={{ border: `1px solid ${T.line}`, borderRadius: 18, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', background: 'linear-gradient(90deg,#FFF1F1,#FFF7EC)', borderBottom: `1px solid ${T.line}` }}>
+            <div className="ka-flash-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', background: 'linear-gradient(90deg,#FFF1F1,#FFF7EC)', borderBottom: `1px solid ${T.line}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: T.red, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="fire" size={24} color="#fff" /></div>
                 <div><div style={{ fontSize: 21, fontWeight: 800, letterSpacing: -0.4 }}>Flash Deals</div><div style={{ fontSize: 13, color: T.sub, fontWeight: 600 }}>Today's lowest prices — going fast</div></div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}><span style={{ fontSize: 13, fontWeight: 700, color: T.sub }}>Ends in</span><Countdown /></div>
             </div>
-            <div style={{ padding: 20 }}>
+            <div className="ka-flash-body" style={{ padding: 20 }}>
               <Carousel items={FLASH} emptyMsg="No flash deals available right now." accent={T.red} flame={true} />
             </div>
           </div>
         </div>
 
         {/* featured products */}
-        <div style={{ padding: '34px 40px 0' }}>
+        <div className="ka-gut" style={{ padding: '34px 40px 0' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: -0.5 }}>Popular this week</div>
             <span style={{ fontSize: 14, fontWeight: 700, color: T.blue, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => openCat()}>View all <Icon name="arrowRight" size={16} color={T.blue} /></span>
@@ -400,18 +460,18 @@
         </div>
 
         {/* RFQ banner */}
-        <div style={{ padding: '34px 40px 0' }}>
-          <div style={{ borderRadius: 18, overflow: 'hidden', background: `linear-gradient(115deg, ${T.ink}, #16284A)`, color: '#fff', display: 'grid', gridTemplateColumns: '1.4fr 1fr', position: 'relative' }}>
-            <div style={{ padding: '40px 44px' }}>
+        <div className="ka-gut" style={{ padding: '34px 40px 0' }}>
+          <div className="ka-rfq" style={{ borderRadius: 18, overflow: 'hidden', background: `linear-gradient(115deg, ${T.ink}, #16284A)`, color: '#fff', display: 'grid', gridTemplateColumns: '1.4fr 1fr', position: 'relative' }}>
+            <div className="ka-rfq-main" style={{ padding: '40px 44px' }}>
               <Pill bg="rgba(255,176,32,.2)" color={T.amber} style={{ marginBottom: 16 }}>Rare Inquiry · RFQ</Pill>
               <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -0.8, lineHeight: 1.12, maxWidth: 480 }}>Obsolete, hard-to-find or bulk? We'll source it for you.</div>
               <div style={{ fontSize: 15.5, color: 'rgba(255,255,255,.82)', margin: '14px 0 24px', maxWidth: 460, lineHeight: 1.5 }}>Upload a datasheet or photo, set your quantity, and pick your currency. Our procurement team replies with a locked quote.</div>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="ka-rfq-ctas" style={{ display: 'flex', gap: 12 }}>
                 <button style={{ background: T.amber, color: T.amberInk, border: 'none', padding: '13px 24px', borderRadius: 11, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: F }} onClick={() => ModalStore.open('inquiry')}>Start an inquiry</button>
                 <button style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,.3)', padding: '13px 24px', borderRadius: 11, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: F }}>How it works</button>
               </div>
             </div>
-            <div style={{ borderLeft: '1px solid rgba(255,255,255,.12)', padding: '32px 36px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
+            <div className="ka-rfq-steps" style={{ borderLeft: '1px solid rgba(255,255,255,.12)', padding: '32px 36px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
               {[['1', 'Submit your spec', 'Part number, photo or datasheet'], ['2', 'Get a locked quote', 'In UGX, USD or EUR within 24h'], ['3', 'Confirm & pay', 'MoMo, card or trade terms']].map(([n, a, b]) => (
                 <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 34, height: 34, borderRadius: 999, border: `2px solid ${T.amber}`, color: T.amber, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, flexShrink: 0 }}>{n}</div>
@@ -422,16 +482,16 @@
         </div>
 
         {/* brands */}
-        <div style={{ padding: '34px 40px 0' }} ref={brandsRef}>
+        <div className="ka-gut" style={{ padding: '34px 40px 0' }} ref={brandsRef}>
           <div style={{ fontSize: 13, fontWeight: 800, color: T.sub, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>Genuine distributor for</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
+          <div className="ka-brands" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
             {['A', 'B', 'C', 'D', 'E', 'F'].map((k) => <DistributorLogo key={k} k={k} />)}
           </div>
         </div>
 
         {/* footer */}
-        <div style={{ marginTop: 40, background: T.ink, color: 'rgba(255,255,255,.7)', padding: '40px 40px 28px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 30, paddingBottom: 28, borderBottom: '1px solid rgba(255,255,255,.12)' }}>
+        <div className="ka-footer ka-gut" style={{ marginTop: 40, background: T.ink, color: 'rgba(255,255,255,.7)', padding: '40px 40px 28px' }}>
+          <div className="ka-footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 30, paddingBottom: 28, borderBottom: '1px solid rgba(255,255,255,.12)' }}>
             <div>
               <div style={{ marginBottom: 12 }}><PPSLogo size={38} tile="#fff" peak={T.blue} cap={T.amber} text="#fff" sub="rgba(255,255,255,.6)" shadow={false} /></div>
               <div style={{ fontSize: 13.5, lineHeight: 1.6, maxWidth: 280 }}>Uganda's electrical supply marketplace — industrial, mechanical & domestic. Plot 14, Industrial Area, Kampala.</div>
@@ -452,15 +512,15 @@
               ['Company', [
                 ['About', () => ModalStore.open('about')],
                 ['Contact', () => ModalStore.open('about', { scrollTo: 'contact' })],
-                ['Careers', () => ToastStore.push("We're always looking for talented people — send your CV to careers@pinnaclepower.co.ug.", { title: 'Careers at Pinnacle', icon: 'user', tone: 'info' })],
+                ['Careers', () => ToastStore.push("We're always looking for talented people — send your CV to kavogrid@gmail.com.", { title: 'Careers at KAVO', icon: 'user', tone: 'info' })],
               ]],
             ].map(([h, items]) => (
               <div key={h}><div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{h}</div>
                 {items.map(([label, onClick]) => <FooterLink key={label} label={label} onClick={onClick} />)}</div>))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, fontSize: 13 }}>
-            <span>© 2026 Pinnacle Power Systems Ltd. All prices incl. VAT.</span>
-            <span style={{ display: 'flex', gap: 10 }}>{['MTN MoMo', 'Airtel', 'Visa', 'Mastercard', 'PayPal'].map((p) => <span key={p} style={{ background: 'rgba(255,255,255,.1)', padding: '5px 11px', borderRadius: 7, fontSize: 12, fontWeight: 700, color: '#fff' }}>{p}</span>)}</span>
+          <div className="ka-footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, fontSize: 13 }}>
+            <span>© 2026 KAVO (U) Ltd. All prices incl. VAT.</span>
+            <span className="ka-pay" style={{ display: 'flex', gap: 10 }}>{['MTN MoMo', 'Airtel', 'Visa', 'Mastercard', 'PayPal'].map((p) => <span key={p} style={{ background: 'rgba(255,255,255,.1)', padding: '5px 11px', borderRadius: 7, fontSize: 12, fontWeight: 700, color: '#fff' }}>{p}</span>)}</span>
           </div>
         </div>
         <CommerceHost />
